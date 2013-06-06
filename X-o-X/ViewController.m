@@ -11,10 +11,32 @@
 @end
 
 @implementation ViewController
+@synthesize mainView_;
 
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+    // Load HTML
+    mainView_.scalesPageToFit = YES;
+    mainView_.delegate = self;
+    [mainView_.scrollView setBounces:NO];
+
+    NSString *path = [[NSBundle mainBundle] pathForResource:@"index" ofType:@"html"];
+    [mainView_ loadRequest:[NSURLRequest requestWithURL:[NSURL fileURLWithPath:path]]];
+}
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+
+#pragma mark -
+#pragma mark UIWebViewDelegate
+
+- (void)webViewDidFinishLoad:(UIWebView *)webView
+{
     MPMediaQuery *albumQuery = [MPMediaQuery albumsQuery];
     NSMutableArray *albums = [@[] mutableCopy];
     NSDateFormatter* formatter = [[NSDateFormatter alloc] init];
@@ -199,13 +221,10 @@
                                                      length:[jsonData length]
                                                    encoding:NSUTF8StringEncoding
                              ];
+        NSString *js = [NSString stringWithFormat:@"_app.initWithAlbums(%@);", jsonStr];
+        //NSString *js = @"_app.initWithAlbums()";
+        [mainView_ stringByEvaluatingJavaScriptFromString:js];
     }
-}
-
-- (void)didReceiveMemoryWarning
-{
-    [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
 }
 
 @end
