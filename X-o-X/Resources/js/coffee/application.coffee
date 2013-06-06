@@ -27,10 +27,10 @@ class App
       if album.MPMediaItemPropertyArtwork?
         row = "#{row}<img src='data:image/jpeg;base64,#{album.MPMediaItemPropertyArtwork}'>"
       row = """
-          #{row}<div>#{album.MPMediaItemPropertyAlbumTitle}</div><div>#{album.MPMediaItemPropertyArtist}</div></td>
-          <td>#{album.MPMediaItemPropertyTitle}</td>
-          <td>#{album.MPMediaItemPropertyGenre}</td>
-          <td>#{album.MPMediaItemPropertyPlayCount}</td>
+          #{row}<div>#{_.escape album.MPMediaItemPropertyAlbumTitle}</div><div>#{_.escape album.MPMediaItemPropertyArtist}</div></td>
+          <td>#{_.escape album.MPMediaItemPropertyTitle}</td>
+          <td>#{_.escape album.MPMediaItemPropertyGenre}</td>
+          <td>#{_.escape album.MPMediaItemPropertyPlayCount}</td>
         </tr>
       """
       $tableBody.append row

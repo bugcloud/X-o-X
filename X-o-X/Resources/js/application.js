@@ -27,7 +27,7 @@
         if (album.MPMediaItemPropertyArtwork != null) {
           row = "" + row + "<img src='data:image/jpeg;base64," + album.MPMediaItemPropertyArtwork + "'>";
         }
-        row = "  " + row + "<div>" + album.MPMediaItemPropertyAlbumTitle + "</div><div>" + album.MPMediaItemPropertyArtist + "</div></td>\n  <td>" + album.MPMediaItemPropertyTitle + "</td>\n  <td>" + album.MPMediaItemPropertyGenre + "</td>\n  <td>" + album.MPMediaItemPropertyPlayCount + "</td>\n</tr>";
+        row = "  " + row + "<div>" + (_.escape(album.MPMediaItemPropertyAlbumTitle)) + "</div><div>" + (_.escape(album.MPMediaItemPropertyArtist)) + "</div></td>\n  <td>" + (_.escape(album.MPMediaItemPropertyTitle)) + "</td>\n  <td>" + (_.escape(album.MPMediaItemPropertyGenre)) + "</td>\n  <td>" + (_.escape(album.MPMediaItemPropertyPlayCount)) + "</td>\n</tr>";
         _results.push($tableBody.append(row));
       }
       return _results;
