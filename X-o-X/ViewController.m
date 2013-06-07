@@ -5,6 +5,7 @@
 
 #import "ViewController.h"
 #import "NSData+Base64.h"
+#import "MBProgressHUD.h"
 
 @interface ViewController ()
 
@@ -37,12 +38,17 @@
 
 - (void)webViewDidFinishLoad:(UIWebView *)webView
 {
-    MPMediaQuery *albumQuery = [MPMediaQuery albumsQuery];
-    NSMutableArray *albums = [@[] mutableCopy];
-    NSDateFormatter* formatter = [[NSDateFormatter alloc] init];
-    [formatter setDateFormat:@"YYYY-MM-dd"];
+    // show loading
+    MBProgressHUD *hud = [MBProgressHUD showHUDAddedTo:self.view animated:YES];
+    [hud setLabelText:@"Loading"];
+    dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, 0.01 * NSEC_PER_SEC);
+    dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
+        MPMediaQuery *albumQuery = [MPMediaQuery albumsQuery];
+        NSMutableArray *albums = [@[] mutableCopy];
+        NSDateFormatter* formatter = [[NSDateFormatter alloc] init];
+        [formatter setDateFormat:@"YYYY-MM-dd"];
 
-    NSArray *jsonKeysAndValues =
+        NSArray *jsonKeysAndValues =
         @[
           @{ @"key": @"MPMediaEntityPropertyPersistentID",   @"value" : MPMediaEntityPropertyPersistentID },
           @{ @"key": @"MPMediaItemPropertyMediaType",        @"value" : MPMediaItemPropertyMediaType },
@@ -72,49 +78,55 @@
           @{ @"key": @"MPMediaItemPropertyUserGrouping",     @"value" : MPMediaItemPropertyUserGrouping },
           @{ @"key": @"MPMediaItemPropertyBookmarkTime",     @"value" : MPMediaItemPropertyBookmarkTime }
           ];
-    for (MPMediaItemCollection *collection in [albumQuery collections]) {
-        NSMutableDictionary *album = [@{} mutableCopy];
-        MPMediaItem *song = [collection representativeItem];
+        for (MPMediaItemCollection *collection in [albumQuery collections]) {
+            NSMutableDictionary *album = [@{} mutableCopy];
+            MPMediaItem *song = [collection representativeItem];
 
-        for (NSDictionary *dict in jsonKeysAndValues) {
-            if (
-                [song respondsToSelector:NSSelectorFromString(dict[@"value"])] &&
-                [song valueForKey:dict[@"value"]] != nil
-            ) {
-                if ([dict[@"key"] isEqualToString:@"MPMediaItemPropertyArtwork"]) {
-                    UIImage *artworkImage = [[song valueForKey:dict[@"value"]] imageWithSize:CGSizeMake(32.0, 32.0)];
-                    NSData *imageData = UIImageJPEGRepresentation(artworkImage, 1.0);
-                    if (imageData) {
-                        album[ dict[@"key"] ] = [imageData base64EncodedString];
+            for (NSDictionary *dict in jsonKeysAndValues) {
+                if (
+                    [song respondsToSelector:NSSelectorFromString(dict[@"value"])] &&
+                    [song valueForKey:dict[@"value"]] != nil
+                    ) {
+                    if ([dict[@"key"] isEqualToString:@"MPMediaItemPropertyArtwork"]) {
+                        UIImage *artworkImage = [[song valueForKey:dict[@"value"]] imageWithSize:CGSizeMake(32.0, 32.0)];
+                        NSData *imageData = UIImageJPEGRepresentation(artworkImage, 1.0);
+                        if (imageData) {
+                            album[ dict[@"key"] ] = [imageData base64EncodedString];
+                        }
+                    } else if (
+                               [dict[@"key"] isEqualToString:@"MPMediaItemPropertyReleaseDate"] ||
+                               [dict[@"key"] isEqualToString:@"MPMediaItemPropertyLastPlayedDate"]
+                               ) {
+                        album[ dict[@"key"] ] = [formatter stringFromDate:[song valueForKey:dict[@"value"]]];
+                    } else {
+                        album[ dict[@"key"] ] = [song valueForKey:dict[@"value"]];
                     }
-                } else if (
-                    [dict[@"key"] isEqualToString:@"MPMediaItemPropertyReleaseDate"] ||
-                    [dict[@"key"] isEqualToString:@"MPMediaItemPropertyLastPlayedDate"]
-                ) {
-                    album[ dict[@"key"] ] = [formatter stringFromDate:[song valueForKey:dict[@"value"]]];
-                } else {
-                    album[ dict[@"key"] ] = [song valueForKey:dict[@"value"]];
                 }
             }
+            [albums addObject:album];
         }
-        [albums addObject:album];
-    }
-    NSError *error;
-    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:albums
-                                                       options:0
-                                                         error:&error
-                        ];
-    if (!jsonData) {
-        NSLog(@"ERROR %@", [error description]);
-    } else {
-        NSString *jsonStr = [[NSString alloc] initWithBytes:[jsonData bytes]
-                                                     length:[jsonData length]
-                                                   encoding:NSUTF8StringEncoding
-                             ];
-        NSString *js = [NSString stringWithFormat:@"_app.initWithAlbums(%@);", jsonStr];
-        //NSString *js = @"_app.initWithAlbums()";
-        [mainView_ stringByEvaluatingJavaScriptFromString:js];
-    }
+        NSError *error;
+        NSData *jsonData = [NSJSONSerialization dataWithJSONObject:albums
+                                                           options:0
+                                                             error:&error
+                            ];
+        if (!jsonData) {
+            NSLog(@"ERROR %@", [error description]);
+        } else {
+            NSString *jsonStr = [[NSString alloc] initWithBytes:[jsonData bytes]
+                                                         length:[jsonData length]
+                                                       encoding:NSUTF8StringEncoding
+                                 ];
+            NSString *js = [NSString stringWithFormat:@"_app.initWithAlbums(%@);", jsonStr];
+            //NSString *js = @"_app.initWithAlbums()";
+            [mainView_ stringByEvaluatingJavaScriptFromString:js];
+        }
+
+        // hide loading
+
+        [hud setLabelText:@"Complete!"];
+        [MBProgressHUD hideHUDForView:self.view animated:YES];
+    });
 }
 
 @end
