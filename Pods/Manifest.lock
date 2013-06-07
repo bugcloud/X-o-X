@@ -1,10 +1,13 @@
 PODS:
+  - MBProgressHUD (0.6)
   - NSData+Base64 (1.0.0)
 
 DEPENDENCIES:
+  - MBProgressHUD (~> 0.6)
   - NSData+Base64
 
 SPEC CHECKSUMS:
+  MBProgressHUD: 9b55a90566fb5d07df0602f6fd9fa04510ad5d52
   NSData+Base64: 36c4e5b6479259c1a68866ccd2a8dd385c9744f7
 
 COCOAPODS: 0.20.2
